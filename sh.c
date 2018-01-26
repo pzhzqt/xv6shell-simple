@@ -15,7 +15,7 @@
 // All commands have at least a type. Have looked at the type, the code
 // typically casts the *cmd to some specific cmd type.
 struct cmd {
-  int type;          //  ' ' (exec), | (pipe), '<' or '>' for redirection
+  int type;          //  ' ' (exec), | or & (pipe), '<' or '>' for redirection
 };
 
 struct execcmd {
@@ -32,7 +32,7 @@ struct redircmd {
 };
 
 struct pipecmd {
-  int type;          // |
+  int type;          // | or &
   struct cmd *left;  // left side of pipe
   struct cmd *right; // right side of pipe
 };
@@ -61,15 +61,15 @@ runcmd(struct cmd *cmd)
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
       _exit(0);
-    fprintf(stderr, "exec not implemented\n");
-    // Your code here ...
+    execvp(ecmd->argv[0],ecmd->argv);
+	fprintf(stderr, "if this prints out, it means exec failed.\n");
     break;
 
   case '>':
   case '<':
     rcmd = (struct redircmd*)cmd;
-    fprintf(stderr, "redir not implemented\n");
-    // Your code here ...
+    close(rcmd->fd);
+	open(rcmd->file,rcmd->flags,S_IRUSR|S_IWUSR);
     runcmd(rcmd->cmd);
     break;
 
@@ -77,6 +77,17 @@ runcmd(struct cmd *cmd)
     pcmd = (struct pipecmd*)cmd;
     fprintf(stderr, "pipe not implemented\n");
     // Your code here ...
+    break;
+
+  case '&':
+    pcmd = (struct pipecmd*)cmd;
+	if (fork1()==0){
+		runcmd(pcmd->right);
+	}else if (fork1()==0){
+		runcmd(pcmd->left);
+	}else{
+		while(wait(NULL)>0);
+	}
     break;
   }    
   _exit(0);
@@ -86,7 +97,7 @@ int
 getcmd(char *buf, int nbuf)
 {
   if (isatty(fileno(stdin)))
-    fprintf(stdout, "6.828$ ");
+    fprintf(stdout, "CS450$ ");
   memset(buf, 0, nbuf);
   if(fgets(buf, nbuf, stdin) == 0)
     return -1; // EOF
@@ -166,10 +177,22 @@ pipecmd(struct cmd *left, struct cmd *right)
   return (struct cmd*)cmd;
 }
 
+struct cmd*
+backcmd(struct cmd *left, struct cmd *right)
+{
+  struct pipecmd* cmd;
+  cmd = malloc(sizeof(*cmd));
+  memset(cmd, 0, sizeof(*cmd));
+  cmd->type = '&';
+  cmd->left = left;
+  cmd->right = right;
+  return (struct cmd*)cmd;
+}
+
 // Parsing
 
 char whitespace[] = " \t\r\n\v";
-char symbols[] = "<|>";
+char symbols[] = "<|>&";
 
 int
 gettoken(char **ps, char *es, char **q, char **eq)
@@ -187,6 +210,7 @@ gettoken(char **ps, char *es, char **q, char **eq)
   case 0:
     break;
   case '|':
+  case '&':
   case '<':
     s++;
     break;
@@ -270,6 +294,9 @@ parsepipe(char **ps, char *es)
   if(peek(ps, es, "|")){
     gettoken(ps, es, 0, 0);
     cmd = pipecmd(cmd, parsepipe(ps, es));
+  }else if(peek(ps, es, "&")){
+	gettoken(ps, es, 0, 0);
+	cmd = backcmd(cmd, parsepipe(ps, es));
   }
   return cmd;
 }
@@ -311,7 +338,7 @@ parseexec(char **ps, char *es)
 
   argc = 0;
   ret = parseredirs(ret, ps, es);
-  while(!peek(ps, es, "|")){
+  while(!peek(ps, es, "|&")){
     if((tok=gettoken(ps, es, &q, &eq)) == 0)
       break;
     if(tok != 'a') {
