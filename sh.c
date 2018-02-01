@@ -61,6 +61,7 @@ runcmd(struct cmd *cmd)
     ecmd = (struct execcmd*)cmd;
     if(ecmd->argv[0] == 0)
       _exit(0);
+	execv(ecmd->argv[0],ecmd->argv);
     execvp(ecmd->argv[0],ecmd->argv);
 	fprintf(stderr, "if this prints out, it means exec failed.\n");
     break;
@@ -296,6 +297,10 @@ parsepipe(char **ps, char *es)
     cmd = pipecmd(cmd, parsepipe(ps, es));
   }else if(peek(ps, es, "&")){
 	gettoken(ps, es, 0, 0);
+	if(*ps==es){
+		fprintf(stderr, "missing command to parallel\n");
+		exit(-1);
+	}
 	cmd = backcmd(cmd, parsepipe(ps, es));
   }
   return cmd;
