@@ -1,0 +1,71 @@
+Each number corresponds to a number in the requirements.
+
+Test 1): As shown, no case needed.
+
+
+Test 2):
+CS450$ echo "hello"
+"hello"
+
+CS450$ wc sh.c
+ 363  956 6826 sh.c
+
+
+Test 3):
+CS450$ echo "hello">file
+CS450$ cat file
+"hello"
+
+CS450$ wc sh.c>file2
+CS450$ cat file2
+ 363  956 6826 sh.c
+
+
+Test 4):
+CS450$ echo "hello"&wc sh.c
+"hello"
+ 363  956 6826 sh.c
+
+CS450$ echo "world">file3&wc sh.c 
+ 363  956 6826 sh.c
+CS450$ cat file3
+"world"
+
+
+Test 5):
+CS450$ echo "foo">file4&echo "bar">file5&wc sh.c
+ 363  956 6826 sh.c
+CS450$ cat file4 file5
+"foo"
+"bar"
+
+CS450$ echo "foo2">file6&echo "bar2">file7&wc file5>file8
+CS450$ cat file6 file7 file8
+"foo2"
+"bar2"
+1 1 6 file5
+
+
+Test 6):
+CS450$ echo "foo">
+missing file for redirection
+
+CS450$ echo "foo"&echo "bar">
+missing file for redirection
+
+CS450$ echo "foo"&          
+missing command to parallel
+
+CS450$ echo "foo"&echo "bar"&    
+missing command to parallel
+
+CS450$ echo "foo3">file9&echo "bar">
+missing file for redirection
+CS450$ cat file9
+cat: file9: No such file or directory
+
+CS450$ echo "foo3">file9&echo "bar"&
+missing command to parallel
+CS450$ cat file9
+cat: file9: No such file or directory
+
