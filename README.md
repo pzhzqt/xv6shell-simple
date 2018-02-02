@@ -12,5 +12,11 @@ gcc sh.c
 ./a.out
 
 Without gcc:
-==========
+============
 ./sh_compiled
+
+Other deliverables:
+===================
+Test cases are shown in test.txt
+
+Code changes are shown in changes.pdf
