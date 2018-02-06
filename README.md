@@ -17,6 +17,12 @@ Without gcc:
 
 Other deliverables:
 ===================
-Test cases are shown in test.txt
+Test cases are shown in test.txt.
+Reason test cases are good:
+1.Covered all requirements.
+2.Has a combination of redirect and parallel.
+3.Contains test cases that leads to error.
 
 Code changes are shown in changes.pdf
+
+UML is drawn in uml.pdf
